@@ -314,6 +314,23 @@ function createHtml({
     headTags.unshift('<meta name="viewport" content="width=device-width" />')
   }
 
+  const template = (min:boolean, lang:string, tagsHead:Array<string>, tagsFoot:Array<string>, bodyClass:string | undefined, bodyContent:string) => `
+<!DOCTYPE html>
+<html lang="${lang}">
+  <head>
+    <meta charSet="utf-8" />
+    ${tagsHead.join(" ")}
+  </head>
+  <body ${bodyClass ? `class=${bodyClass}` : null}>
+    <h1>totally custom</h1>
+    ${bodyContent}
+    ${tagsFoot.join(" ")}
+  </body>
+</html>
+`;
+
+  return template(minify, lang, headTags, scriptTags, className, body);
+
   return [
     '<!DOCTYPE html>',
     `<html lang="${lang}">`,
