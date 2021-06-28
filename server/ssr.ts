@@ -110,7 +110,7 @@ export class Renderer {
     const isDev = this.#app.isDev
     const state = { entryFile: '' }
     const appModule = this.findModuleByName('app')
-    const { default: App } = appModule ? await this.#app.importModule(appModule) : {} as any
+    const { default: App, Doc:Doc } = appModule ? await this.#app.importModule(appModule) : {} as any
     const nestedPageComponents = await Promise.all(nestedModules
       .filter(({ url }) => this.#app.getModule(url) !== null)
       .map(async ({ url }) => {
@@ -161,7 +161,8 @@ export class Renderer {
           })
         ],
         body: `<div id="__aleph">${body}</div>`,
-        minify: !isDev
+        minify: !isDev,
+        formatter: Doc
       }),
       data
     ]
@@ -276,14 +277,16 @@ function createHtml({
   head = [],
   className,
   scripts = [],
-  minify = false
+  minify = false,
+  formatter
 }: {
   body: string,
   lang?: string,
   head?: string[],
   className?: string,
   scripts?: (string | { id?: string, type?: string, src?: string, innerText?: string, async?: boolean, preload?: boolean, nomodule?: boolean })[],
-  minify?: boolean
+  minify?: boolean,
+  formatter?: (min:boolean, lang:string, tagsHead:Array<string>, tagsFoot:Array<string>, bodyClass:string | undefined, bodyContent:string) => string
 }) {
   const eol = minify ? '' : '\n'
   const indent = minify ? '' : ' '.repeat(2)
@@ -314,22 +317,9 @@ function createHtml({
     headTags.unshift('<meta name="viewport" content="width=device-width" />')
   }
 
-  const template = (min:boolean, lang:string, tagsHead:Array<string>, tagsFoot:Array<string>, bodyClass:string | undefined, bodyContent:string) => `
-<!DOCTYPE html>
-<html lang="${lang}">
-  <head>
-    <meta charSet="utf-8" />
-    ${tagsHead.join(" ")}
-  </head>
-  <body ${bodyClass ? `class=${bodyClass}` : null}>
-    <h1>totally custom</h1>
-    ${bodyContent}
-    ${tagsFoot.join(" ")}
-  </body>
-</html>
-`;
-
-  return template(minify, lang, headTags, scriptTags, className, body);
+  if(formatter){
+    return formatter(minify, lang, headTags, scriptTags, className, body);
+  }
 
   return [
     '<!DOCTYPE html>',
